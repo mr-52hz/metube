@@ -2,3 +2,11 @@
 .venv
 ui/.angular
 ui/node_modules
+.github
+.vscode
+README.md
+screenshot.gif
+completed.db
+pending.db
+queue.db
+LICENSE
