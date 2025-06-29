@@ -235,7 +235,7 @@ class DownloadQueue:
             self.seq_lock = asyncio.Lock()
         elif self.config.DOWNLOAD_MODE == 'limited':
             self.semaphore = asyncio.Semaphore(int(self.config.MAX_CONCURRENT_DOWNLOADS))
-        
+
         self.done.load()
 
     async def __import_queue(self):
@@ -399,6 +399,17 @@ class DownloadQueue:
             already.add(url)
         try:
             entry = await asyncio.get_running_loop().run_in_executor(None, self.__extract_info, url, playlist_strict_mode)
+
+            # auto dispatch
+            if folder is None:
+                base_dir = self.config.STATE_DIR
+                extractor = entry.get('extractor', 'UnknownPlatform')
+                uploader = entry.get('uploader', 'UnknownUploader')
+                folder = f'{base_dir}/{extractor}/{uploader}'
+                if not os.path.exists(folder):
+                    os.makedirs(folder)
+                folder = f'{extractor}/{uploader}'
+
         except yt_dlp.utils.YoutubeDLError as exc:
             return {'status': 'error', 'msg': str(exc)}
         return await self.__add_entry(entry, quality, format, folder, custom_name_prefix, playlist_strict_mode, playlist_item_limit, auto_start, already)
